@@ -17,9 +17,9 @@ class Cell:
 
     def clear(self):
         if self._flagged:
-            raise RuntimeError('Cell is flagged! Cannot be cleared.')
+            raise RuntimeError(f'Cell {repr(self)} is flagged! Cannot be cleared.')
         elif self._cleared:
-            raise RuntimeError('Cell is clear! Cannot be cleared.')
+            raise RuntimeError(f'Cell {repr(self)} is clear! Cannot be cleared.')
         else:
             self._cleared = True
 
@@ -30,7 +30,7 @@ class Cell:
     @counter.setter
     def counter(self, val):
         if val < 0 or 5 < val:
-            raise ValueError(f'Counter out of range: [{val}]')
+            raise ValueError(f'Cell {repr(self)} Counter out of range: [{val}]')
         self._counter = val
 
     @property
@@ -39,12 +39,12 @@ class Cell:
 
     def flag(self):
         if self._cleared:
-            raise RuntimeError('Cell is cleared and cannot be flagged.')
+            raise RuntimeError(f'Cell {repr(self)} is cleared and cannot be flagged.')
         self._flagged = True
 
     def unflag(self):
         if not self._flagged:
-            raise RuntimeError('Cell is not flagged.')
+            raise RuntimeError(f'Cell {repr(self)} is not flagged.')
         self._flagged = False
 
     def __str__(self):
@@ -58,6 +58,13 @@ class Cell:
             return str(self.counter)
         else:
             return ' '
+
+    def __repr__(self):
+        flagged = 'F' if self._flagged else '-'
+        bomb = 'B' if self.bomb else '-'
+        counter = str(self.counter)
+        cleared = 'C' if self._cleared else '-'
+        return f"[{ascii_uppercase[self.row]}:{self.col}]{str(self)}|{bomb}{counter}{flagged}{cleared}]"
 
 
 class Grid:
@@ -79,9 +86,9 @@ class Grid:
                 neighbour_row = row + row_of
                 neighbour_col = col + col_of
                 if not (neighbour_col == col and neighbour_row == row):
-                    try:
+                    if 0 <= neighbour_row < self._rows and 0 <= neighbour_col < self._cols:
                         yield self.cells[neighbour_row][neighbour_col]
-                    except IndexError:
+                    else:
                         continue
 
     def place_bombs(self, bombs: int):
@@ -120,8 +127,10 @@ class Grid:
                 for neighbour in self.cell_neighbours(cell.row, cell.col):
                     to_clear.add(neighbour)
 
-    def __str__(self):
-        print(f"    {' '.join(map(str, range(1, self._cols + 1)))}")
+    def print_grid(self, debug=False):
+        sep = ' ' if not debug else '            '
+        p_func = str if not debug else repr
+        print(f"  {sep.join(map(str, range(1, self._cols + 1)))}")
         for row_label, row in zip(ascii_uppercase, self.cells):
-            print(f"{row_label} | {' '.join(map(str, row))}")
+            print(f"{row_label} {' '.join(map(p_func, row))}")
 
