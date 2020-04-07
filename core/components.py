@@ -57,7 +57,7 @@ class Cell:
         elif self._counter > 0:
             return str(self.counter)
         else:
-            return ' '
+            return '.'
 
     def __repr__(self):
         flagged = 'F' if self._flagged else '-'
@@ -88,8 +88,6 @@ class Grid:
                 if not (neighbour_col == col and neighbour_row == row):
                     if 0 <= neighbour_row < self._rows and 0 <= neighbour_col < self._cols:
                         yield self.cells[neighbour_row][neighbour_col]
-                    else:
-                        continue
 
     def place_bombs(self, bombs: int):
         bomb_positions = random.sample(range(self._rows * self._cols), bombs)
@@ -125,10 +123,11 @@ class Grid:
             cell.clear()
             if cell.counter == 0:
                 for neighbour in self.cell_neighbours(cell.row, cell.col):
-                    to_clear.add(neighbour)
+                    if not neighbour.cleared:
+                        to_clear.add(neighbour)
 
     def print_grid(self, debug=False):
-        sep = ' ' if not debug else '            '
+        sep = ' ' if not debug else ' ' * 12
         p_func = str if not debug else repr
         print(f"  {sep.join(map(str, range(1, self._cols + 1)))}")
         for row_label, row in zip(ascii_uppercase, self.cells):
