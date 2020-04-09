@@ -29,7 +29,7 @@ class Cell:
 
     @counter.setter
     def counter(self, val):
-        if val < 0 or 5 < val:
+        if val < 0 or 8 < val:
             raise ValueError(f'Cell {repr(self)} Counter out of range: [{val}]')
         self._counter = val
 
@@ -71,6 +71,7 @@ class Grid:
     def __init__(self, rows: int, cols: int):
         self._rows = rows
         self._cols = cols
+        self._bombs = 0
         self.cells = [[Cell(row, col) for col in range(cols)] for row in range(rows)]
 
     def cell_coord(self, pos: int) -> tuple:
@@ -90,6 +91,8 @@ class Grid:
                         yield self.cells[neighbour_row][neighbour_col]
 
     def place_bombs(self, bombs: int):
+        if self._bombs > 0:
+            raise RuntimeError(f'Bombs are already down! ({self._bombs})')
         bomb_positions = random.sample(range(self._rows * self._cols), bombs)
         for pos in bomb_positions:
             row, col = self.cell_coord(pos)
@@ -97,6 +100,7 @@ class Grid:
             cell.bomb = True
             for neighbour_cell in self.cell_neighbours(row, col):
                 neighbour_cell.counter += 1
+        self._bombs = bombs
 
     def reveal_cell(self, row: int, col: int) -> bool:
         try:
