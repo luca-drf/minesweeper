@@ -1,5 +1,11 @@
 from string import ascii_uppercase
+from itertools import product
 import random
+
+from typing import List
+
+
+extended_ascii = ' ' + ascii_uppercase
 
 
 class Cell:
@@ -72,14 +78,14 @@ class Grid:
         self._rows = rows
         self._cols = cols
         self._bombs = 0
-        self.cells = [[Cell(row, col) for col in range(cols)] for row in range(rows)]
+        self._cells = [[Cell(row, col) for col in range(cols)] for row in range(rows)]
 
-    def cell_coord(self, pos: int) -> tuple:
+    def cell_at(self, pos: int) -> Cell:
         row = pos // self._cols
         col = pos % self._cols
         if row >= self._rows:
-            raise ValueError(f'Position is out of range: ({pos})')
-        return row, col
+            raise IndexError(f'Position is out of range: ({pos})')
+        return self._cells[row][col]
 
     def cell_neighbours(self, row: int, col: int):
         for row_of in (-1, 0, 1):
@@ -88,23 +94,25 @@ class Grid:
                 neighbour_col = col + col_of
                 if not (neighbour_col == col and neighbour_row == row):
                     if 0 <= neighbour_row < self._rows and 0 <= neighbour_col < self._cols:
-                        yield self.cells[neighbour_row][neighbour_col]
+                        yield self._cells[neighbour_row][neighbour_col]
 
-    def place_bombs(self, bombs: int):
+    def place_bombs(self, bombs: int, positions: List[int] = None):
         if self._bombs > 0:
             raise RuntimeError(f'Bombs are already down! ({self._bombs})')
-        bomb_positions = random.sample(range(self._rows * self._cols), bombs)
+        if positions:
+            bomb_positions = positions[0:bombs]
+        else:
+            bomb_positions = random.sample(range(len(self)), bombs)
         for pos in bomb_positions:
-            row, col = self.cell_coord(pos)
-            cell = self.cells[row][col]
+            cell = self.cell_at(pos)
             cell.bomb = True
-            for neighbour_cell in self.cell_neighbours(row, col):
+            for neighbour_cell in self.cell_neighbours(cell.row, cell.col):
                 neighbour_cell.counter += 1
         self._bombs = bombs
 
     def reveal_cell(self, row: int, col: int) -> bool:
         try:
-            cell = self.cells[row][col]
+            cell = self._cells[row][col]
         except IndexError:
             raise ValueError(f'Coordinates out of range.')
         if cell.bomb:
@@ -114,14 +122,12 @@ class Grid:
         return True
 
     def reveal_bombs(self):
-        for row in range(self._rows):
-            for col in range(self._cols):
-                cell = self.cells[row][col]
-                if cell.bomb:
-                    cell.clear()
+        for cell in self:
+            if cell.bomb:
+                cell.clear()
 
     def _clear_field(self, row: int, col: int):
-        to_clear = set((self.cells[row][col],))
+        to_clear = set((self._cells[row][col],))
         while len(to_clear) > 0:
             cell = to_clear.pop()
             cell.clear()
@@ -130,10 +136,20 @@ class Grid:
                     if not neighbour.cleared:
                         to_clear.add(neighbour)
 
-    def print_grid(self, debug=False):
+    def __iter__(self):
+        for row in self._cells:
+            for cell in row:
+                yield cell
+
+    def __len__(self):
+        return self._rows * self._cols
+
+    def to_string(self, debug=False):
+        elems = []
         sep = ' ' if not debug else ' ' * 12
         p_func = str if not debug else repr
-        print(f"  {sep.join(map(str, range(1, self._cols + 1)))}")
-        for row_label, row in zip(ascii_uppercase, self.cells):
-            print(f"{row_label} {' '.join(map(p_func, row))}")
+        elems.append(f"   {sep.join(map(str, range(1, self._cols + 1)))}\n")
+        for row_label, row in zip(map(''.join, product(extended_ascii, ascii_uppercase)), self._cells):
+            elems.append(f"{row_label} {' '.join(map(p_func, row))}\n")
+        return ''.join(elems)
 
