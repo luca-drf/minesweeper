@@ -1,5 +1,5 @@
 import pytest
-from core.components import Cell, Grid
+from core.components import Cell, Grid, label_to_i
 
 
 # TODO: Add more corner-case tests
@@ -84,14 +84,34 @@ def test_grid_cell_position(default_grid):
     assert default_grid._cells[5][6].col == 6
 
 
-def test_grid_cell_at(default_grid):
-    cell = default_grid.cell_at(41)
+def test_grid_cell_at_pos(default_grid):
+    cell = default_grid.cell_at_pos(41)
     assert (cell.row, cell.col) == (5, 6)
 
 
-def test_grid_cell_at_error(default_grid):
+def test_grid_cell_at_pos_error(default_grid):
     with pytest.raises(IndexError):
-        default_grid.cell_at(42)
+        default_grid.cell_at_pos(42)
+
+
+def test_grid_cell_at(default_grid):
+    assert default_grid.cell_at('A', '1') is default_grid._cells[0][0]
+    assert default_grid.cell_at('F', '7') is default_grid._cells[5][6]
+
+
+def test_grid_cell_at_error(default_grid):
+    with pytest.raises(ValueError):
+        default_grid.cell_at('A', '')
+    with pytest.raises(ValueError):
+        default_grid.cell_at('', '1')
+    with pytest.raises(ValueError):
+        default_grid.cell_at('A', 'B')
+    with pytest.raises(IndexError):
+        default_grid.cell_at('A', '-1')
+    with pytest.raises(IndexError):
+        default_grid.cell_at('AA', '1')
+    with pytest.raises(IndexError):
+        default_grid.cell_at('A', '42')
 
 
 def test_grid_cell_place_bombs(default_grid):
@@ -119,7 +139,7 @@ def test_grid_cell_neighbours_corner(default_grid):
         default_grid._cells[1][0],
         default_grid._cells[1][1]
     ]
-    actual_neighbours = default_grid.cell_neighbours(cell.row, cell.col)
+    actual_neighbours = default_grid._cell_neighbours(cell.row, cell.col)
     iterations = 0
     for expected_neighbour, actual_neighbour in zip(expected_neighbours, actual_neighbours):
         assert expected_neighbour is actual_neighbour
@@ -139,7 +159,7 @@ def test_grid_cell_neighbours_center(default_grid):
         default_grid._cells[2][1],
         default_grid._cells[2][2]
     ]
-    actual_neighbours = default_grid.cell_neighbours(cell.row, cell.col)
+    actual_neighbours = default_grid._cell_neighbours(cell.row, cell.col)
     iterations = 0
     for expected_neighbour, actual_neighbour in zip(expected_neighbours, actual_neighbours):
         assert expected_neighbour is actual_neighbour
@@ -161,6 +181,23 @@ def test_grid_clear_field(default_grid):
     default_grid._clear_field(5, 6)
     assert not default_grid._cells[0][0].cleared
     assert not default_grid._cells[2][2].cleared
+    assert default_grid._cleared_cells == 40
     for cell, exp_count in zip(default_grid, expected_counters):
         assert cell.counter == exp_count
 
+
+def test_grid_is_clear(default_grid):
+    bombs_positions = [0, 0]
+    default_grid.place_bombs(1, positions=bombs_positions)
+    default_grid._clear_field(0, 1)
+    assert not default_grid.is_clear()
+    default_grid._clear_field(0, 2)
+    assert default_grid.is_clear()
+
+
+def test_label_to_i():
+    assert label_to_i('A') == 1
+    assert label_to_i('AA') == 27
+    assert label_to_i('BAA') == 1379
+    assert label_to_i('AP') == 42
+    assert label_to_i('') == 0
