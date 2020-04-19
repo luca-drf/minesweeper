@@ -1,7 +1,7 @@
+from __future__ import annotations
 from string import ascii_uppercase
 from itertools import product
 import random
-
 from typing import List
 
 
@@ -9,9 +9,9 @@ extended_ascii = ' ' + ascii_uppercase
 
 
 class Cell:
-    def __init__(self, row: int, col: int, cleared: bool = False, bomb: bool = False, flagged: bool = False):
+    def __init__(self, row: int, col: int, cleared: bool = False, mine: bool = False, flagged: bool = False):
         self._cleared = cleared
-        self.bomb = bomb
+        self.mine = mine
         self._flagged = flagged
         self._counter = 0
         self.row = row
@@ -58,8 +58,8 @@ class Cell:
             return 'F'
         elif not self._cleared:
             return '-'
-        elif self.bomb:
-            return 'B'
+        elif self.mine:
+            return 'M'
         elif self._counter > 0:
             return str(self.counter)
         else:
@@ -67,17 +67,17 @@ class Cell:
 
     def __repr__(self):
         flagged = 'F' if self._flagged else '-'
-        bomb = 'B' if self.bomb else '-'
+        mine = 'B' if self.mine else '-'
         counter = str(self.counter)
         cleared = 'C' if self._cleared else '-'
-        return f"[{ascii_uppercase[self.row]}:{self.col}]{str(self)}|{bomb}{counter}{flagged}{cleared}]"
+        return f"[{ascii_uppercase[self.row]}:{self.col + 1}]{str(self)}|{mine}{counter}{flagged}{cleared}]"
 
 
 class Grid:
     def __init__(self, rows: int, cols: int):
         self._rows = rows
         self._cols = cols
-        self._bombs = 0
+        self._mines = 0
         self._cleared_cells = 0
         self._cells = [[Cell(row, col) for col in range(cols)] for row in range(rows)]
 
@@ -98,11 +98,11 @@ class Grid:
         return self._cols
 
     @property
-    def bombs(self) -> int:
-        return self._bombs
+    def mines(self) -> int:
+        return self._mines
 
     def is_clear(self) -> bool:
-        return (self._bombs + self._cleared_cells) == len(self)
+        return (self._mines + self._cleared_cells) == len(self)
 
     def cell_at(self, row: str, col: str) -> Cell:
         if not (row and col):
@@ -127,35 +127,43 @@ class Grid:
             raise IndexError(f'Position is out of range: ({pos})')
         return self._cells[row][col]
 
-    def place_bombs(self, bombs: int, positions: List[int] = None):
-        if self._bombs > 0:
-            raise RuntimeError(f'Bombs are already down! ({self._bombs})')
+    def place_mines(self, mines: int, positions: List[int] = None) -> Grid:
+        if self._mines > 0:
+            raise RuntimeError(f'Mines are already down! ({self._mines})')
         if positions:
-            bomb_positions = positions[0:bombs]
+            mine_positions = positions[0:mines]
         else:
-            bomb_positions = random.sample(range(len(self)), bombs)
-        for pos in bomb_positions:
+            mine_positions = random.sample(range(len(self)), mines)
+        for pos in mine_positions:
             cell = self.cell_at_pos(pos)
-            cell.bomb = True
+            cell.mine = True
             for neighbour_cell in self._cell_neighbours(cell.row, cell.col):
                 neighbour_cell.counter += 1
-        self._bombs = bombs
+        self._mines = mines
+        return self
 
-    def reveal_cell(self, row: int, col: int) -> bool:
-        try:
-            cell = self._cells[row][col]
-        except IndexError:
-            raise ValueError(f'Coordinates out of range.')
-        if cell.bomb:
-            self.reveal_bombs()
+    def reveal_cell(self, row: str, col: str) -> bool:
+        cell = self.cell_at(row, col)
+        if cell.mine:
+            self.reveal_mines()
             return False
-        self._clear_field(row, col)
+        self._clear_field(cell.row, cell.col)
         return True
 
-    def reveal_bombs(self):
+    def reveal_mines(self):
         for cell in self:
-            if cell.bomb:
+            if cell.mine:
                 cell.clear()
+
+    def flag_cell(self, row: str, col: str) -> Cell:
+        cell = self.cell_at(row, col)
+        cell.flag()
+        return cell
+
+    def unflag_cell(self, row: str, col: str) -> Cell:
+        cell = self.cell_at(row, col)
+        cell.unflag()
+        return cell
 
     def to_string(self, debug: bool = False) -> str:
         elems = []

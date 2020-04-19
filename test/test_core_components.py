@@ -8,7 +8,7 @@ from core.components import Cell, Grid, label_to_i
 def test_cell_defaults():
     cell = Cell(1, 2)
     assert not cell.cleared
-    assert not cell.bomb
+    assert not cell.mine
     assert not cell.flagged
     assert cell.counter == 0
     assert cell.row == 1
@@ -114,21 +114,21 @@ def test_grid_cell_at_error(default_grid):
         default_grid.cell_at('A', '42')
 
 
-def test_grid_cell_place_bombs(default_grid):
-    assert default_grid._bombs == 0
-    assert sum(map(lambda cell: cell.bomb, default_grid)) == 0
-    default_grid.place_bombs(6)
-    assert default_grid._bombs == 6
-    assert sum(map(lambda cell: cell.bomb, default_grid)) == 6
+def test_grid_cell_place_mines(default_grid):
+    assert default_grid._mines == 0
+    assert sum(map(lambda cell: cell.mine, default_grid)) == 0
+    default_grid.place_mines(6)
+    assert default_grid._mines == 6
+    assert sum(map(lambda cell: cell.mine, default_grid)) == 6
     with pytest.raises(RuntimeError):
-        default_grid.place_bombs(1)
+        default_grid.place_mines(1)
 
 
-def test_grid_reveal_bombs(default_grid):
-    default_grid.place_bombs(4)
-    default_grid.reveal_bombs()
+def test_grid_reveal_mines(default_grid):
+    default_grid.place_mines(4)
+    default_grid.reveal_mines()
     for cell in default_grid:
-        if cell.bomb:
+        if cell.mine:
             assert cell.cleared
 
 
@@ -168,7 +168,7 @@ def test_grid_cell_neighbours_center(default_grid):
 
 
 def test_grid_clear_field(default_grid):
-    bombs_positions = [0, 16]
+    mines_positions = [0, 16]
     expected_counters = [
             0, 1, 0, 0, 0, 0, 0,
             1, 2, 1, 1, 0, 0, 0,
@@ -177,7 +177,7 @@ def test_grid_clear_field(default_grid):
             0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0
     ]
-    default_grid.place_bombs(2, positions=bombs_positions)
+    default_grid.place_mines(2, positions=mines_positions)
     default_grid._clear_field(5, 6)
     assert not default_grid._cells[0][0].cleared
     assert not default_grid._cells[2][2].cleared
@@ -187,8 +187,8 @@ def test_grid_clear_field(default_grid):
 
 
 def test_grid_is_clear(default_grid):
-    bombs_positions = [0, 0]
-    default_grid.place_bombs(1, positions=bombs_positions)
+    mines_positions = [0, 0]
+    default_grid.place_mines(1, positions=mines_positions)
     default_grid._clear_field(0, 1)
     assert not default_grid.is_clear()
     default_grid._clear_field(0, 2)
