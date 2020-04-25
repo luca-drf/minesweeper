@@ -8,6 +8,10 @@ Basic Minesweeper game implementation in Python.
 - pytest (dev)
 
 ## Usage
+
+There are four modes available: 9x9, 16x16, 25x25, 32x32.
+Simply run the main executable and follow the instructions.
+
 ```
 $ python minesweeper.py
 == Minesweeper ==
@@ -26,5 +30,5 @@ Enter Grid dimension
  I -  -  -  -  -  -  -  -  -
 
 Enter action: [F]lag/[U]nflag or [R]eveal followed by cell coordinates (e.g. R A:9)
-Action:
+Action: R I:9
 ```
