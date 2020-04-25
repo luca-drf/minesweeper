@@ -18,14 +18,20 @@ class Cell:
         self.col = col
 
     @property
+    def coords_str(self):
+        return f'{ascii_uppercase[self.row]}:{self.col + 1}'
+
+    @property
     def cleared(self) -> bool:
         return self._cleared
 
     def clear(self):
         if self._flagged:
-            raise RuntimeError(f'Cell {repr(self)} is flagged! Cannot be cleared.')
+            raise RuntimeError(f'Cell [{self.coords_str}] is flagged! Cannot be cleared.',
+                               f'{repr(self)}')
         elif self._cleared:
-            raise RuntimeError(f'Cell {repr(self)} is clear! Cannot be cleared.')
+            raise RuntimeError(f'Cell [{self.coords_str}] is clear! Cannot be cleared.',
+                               f'{repr(self)}')
         else:
             self._cleared = True
 
@@ -36,7 +42,8 @@ class Cell:
     @counter.setter
     def counter(self, val):
         if val < 0 or 8 < val:
-            raise ValueError(f'Cell {repr(self)} Counter out of range: [{val}]')
+            raise ValueError(f'Cell [{self.coords_str}] Counter out of range: [{val}]',
+                             f'{repr(self)}')
         self._counter = val
 
     @property
@@ -45,12 +52,14 @@ class Cell:
 
     def flag(self):
         if self._cleared:
-            raise RuntimeError(f'Cell {repr(self)} is cleared and cannot be flagged.')
+            raise RuntimeError(f'Cell [{self.coords_str}] is cleared and cannot be flagged.',
+                               f'{repr(self)}')
         self._flagged = True
 
     def unflag(self):
         if not self._flagged:
-            raise RuntimeError(f'Cell {repr(self)} is not flagged.')
+            raise RuntimeError(f'Cell [{self.coords_str}] is not flagged.',
+                               f'{repr(self)}')
         self._flagged = False
 
     def __str__(self):
@@ -70,7 +79,7 @@ class Cell:
         mine = 'B' if self.mine else '-'
         counter = str(self.counter)
         cleared = 'C' if self._cleared else '-'
-        return f"[{ascii_uppercase[self.row]}:{self.col + 1}]{str(self)}|{mine}{counter}{flagged}{cleared}]"
+        return f"[{self.coords_str}]{str(self)}|{mine}{counter}{flagged}{cleared}]"
 
 
 class Grid:

@@ -29,13 +29,6 @@ def init_grid() -> Grid:
     return grid
 
 
-#  def perform_action(action: Callable[[str, str], Cell], row: str, col: str) -> None:
-#      try:
-#          action(row, col)
-#          print
-#      except (ValueError, IndexError) as e:
-#          print(e)
-
 def game_loop(grid: Grid) -> None:
     print()
     print(grid.to_string())
@@ -66,7 +59,7 @@ def game_loop(grid: Grid) -> None:
                 else:
                     print('Please enter a valid action. (F, U or R)')
             except (ValueError, IndexError, RuntimeError) as e:
-                print(e)
+                print(e.args[0])
         else:
             print('Please enter a valid action.')
 
