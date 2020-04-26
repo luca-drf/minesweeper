@@ -6,6 +6,7 @@ Basic Minesweeper game implementation in Python.
 ## Requirements
 - Python 3.8
 - pytest (dev)
+- mypy (dev)
 
 ## Usage
 
@@ -32,3 +33,4 @@ Enter Grid dimension
 Enter action: [F]lag/[U]nflag or [R]eveal followed by cell coordinates (e.g. R A:9)
 Action: R I:9
 ```
+You can exit at any time with `Ctrl+C`
